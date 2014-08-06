@@ -5,6 +5,10 @@ import tornado.ioloop
 import tornado.options
 from uuid import uuid4
 
+# DetailHandler renders the HTML
+# CartHandler provides interface to manipulate the cart
+# StatusHandle queried for notifciations of inventory change
+
 class ShoppingCart(object):
 	totalInventory = 10
 	callbacks = []
@@ -17,6 +21,7 @@ class ShoppingCart(object):
 		self.callbacks.remove(callback)
 	
 	def moveItemToCart(self, session):
+	""" if the session is already in the self.carts return, otherwise add a new key to self.carts """
 		if session in self.carts:
 			return
 		
@@ -24,6 +29,7 @@ class ShoppingCart(object):
 		self.notifyCallbacks()
 	
 	def removeItemFromCart(self, session):
+	""" if the session is not in self.carts return, otherwise delete the session key from self.carts """
 		if session not in self.carts:
 			return
 		
@@ -39,11 +45,12 @@ class ShoppingCart(object):
 
 class DetailHandler(tornado.web.RequestHandler):
 	def get(self):
-		session = uuid4()
-		count = self.application.shoppingCart.getInventoryCount()
-		self.render("index.html", session=session, count=count)
+		session = uuid4()  # unique id is generated for each request
+		count = self.application.shoppingCart.getInventoryCount() # get the current inventory
+		self.render("index.html", session=session, count=count) # render the index.html page with the session and count
 
 class CartHandler(tornado.web.RequestHandler):
+	""" defines the functional behavior of the cart in a POST request """
 	def post(self):
 		action = self.get_argument('action')
 		session = self.get_argument('session')
